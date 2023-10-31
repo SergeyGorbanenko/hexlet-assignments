@@ -1,5 +1,6 @@
 package exercise.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +42,8 @@ public class TaskControllerTest {
     @Autowired
     private ObjectMapper om;
 
+    private Task task;
+
     public Task createTestTask() {
         return Instancio.of(Task.class)
             .ignore(Select.field(Task::getId))
@@ -49,10 +52,23 @@ public class TaskControllerTest {
             .create();
     }
 
+    @BeforeEach
+    public void setUp() {
+        task = createTestTask();
+    }
+
+    @Test
+    public void testIndex() throws Exception {
+        var result = mockMvc.perform(get("/tasks"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        var body = result.getResponse().getContentAsString();
+        assertThatJson(body).isArray();
+    }
+
     @Test
     public void testShow() throws Exception {
-        var task = createTestTask();
-
         taskRepository.save(task);
 
         var request = get("/tasks/" + task.getId());
@@ -70,15 +86,17 @@ public class TaskControllerTest {
     }
 
     @Test
-    public void testShowNotFound() throws Exception {
-        mockMvc.perform(get("/tasks/999999"))
-            .andExpect(status().isNotFound());
+    public void testShowNegative() throws Exception {
+        var result = mockMvc.perform(get("/tasks/999999"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        var body = result.getResponse().getContentAsString();
+        assertThat(body).contains("Task with id 999999 not found");
     }
 
     @Test
     public void testCreate() throws Exception {
-        var task = createTestTask();
-
         var request = post("/tasks")
             .contentType(MediaType.APPLICATION_JSON)
             .content(om.writeValueAsString(task));
@@ -97,8 +115,6 @@ public class TaskControllerTest {
 
     @Test
     public void testUpdate() throws Exception {
-        var task = createTestTask();
-
         taskRepository.save(task);
 
         var data = new HashMap<>();
@@ -125,9 +141,21 @@ public class TaskControllerTest {
     }
 
     @Test
-    public void testDelete() throws Exception {
-        var task = createTestTask();
+    public void testUpdateNegative() throws Exception {
+        var task = new Task();
+        task.setTitle("Title");
+        task.setDescription("Description");
 
+        var request = put("/tasks/{id}", 999999)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(om.writeValueAsString(task));
+
+        mockMvc.perform(request)
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDelete() throws Exception {
         taskRepository.save(task);
 
         var request = delete("/tasks/" + task.getId());
@@ -135,7 +163,7 @@ public class TaskControllerTest {
         var result = mockMvc.perform(request)
             .andExpect(status().isOk());
 
-        assertThat(taskRepository.findById(task.getId()).isEmpty()).isTrue();        
+        assertThat(taskRepository.findById(task.getId()).isEmpty()).isTrue();
     }
 // END
 }
