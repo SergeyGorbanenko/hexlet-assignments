@@ -50,7 +50,7 @@ public class ProductsController {
     @ResponseStatus(HttpStatus.OK)
     public ProductDTO show(@PathVariable long id) {
         var product = productRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product with id = " + id + " not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Product with id = " + id + " not found!"));
 
         return productMapper.map(product);
     }
@@ -59,7 +59,7 @@ public class ProductsController {
     @ResponseStatus(HttpStatus.CREATED)
     public ProductDTO create(@Valid @RequestBody ProductCreateDTO productCreateDTO) {
         var category = categoryRepository.findById(productCreateDTO.getCategoryId())
-            .orElseThrow(() -> new BadRequestException("Category with id = " + productCreateDTO.getCategoryId() + " not found"));
+            .orElseThrow(() -> new BadRequestException("Category with id = " + productCreateDTO.getCategoryId() + " not found!"));
 
         var product = productMapper.map(productCreateDTO);
         productRepository.save(product);
@@ -73,7 +73,7 @@ public class ProductsController {
             .orElseThrow(() -> new ResourceNotFoundException("Product with id = " + id + " not found"));
 
         var category = categoryRepository.findById(productUpdateDTO.getCategoryId().get())
-            .orElseThrow(() -> new BadRequestException("Category with id = " + productUpdateDTO.getCategoryId().get() + " not found"));
+            .orElseThrow(() -> new BadRequestException("Category with id = " + productUpdateDTO.getCategoryId().get() + " not found!"));
 
         productMapper.update(productUpdateDTO, product);
         productRepository.save(product);
