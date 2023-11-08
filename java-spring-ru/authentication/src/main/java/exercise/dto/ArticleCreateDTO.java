@@ -7,13 +7,10 @@ import lombok.Setter;
 @Setter
 @Getter
 public class ArticleCreateDTO {
-
     @NotBlank
     private String title;
-
     @NotBlank
     private String slug;
-
     @NotBlank
     private String content;
 }
