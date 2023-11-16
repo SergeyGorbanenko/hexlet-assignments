@@ -4,11 +4,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut;
+
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.nio.file.Files;
+import java.util.concurrent.atomic.AtomicReference;
 
 class AppTest {
     private String destPath;
@@ -46,6 +49,22 @@ class AppTest {
     }
 
     // BEGIN
-    
+    @Test
+    void testGetDirectorySize() throws Exception {
+        String dir = "src/test/resources/dir";
+        CompletableFuture<Long> result = App.getDirectorySize(dir);
+
+
+        AtomicReference<Long> actual = new AtomicReference<>(0L);
+        Files.list(Path.of(dir)).forEach(path -> actual.updateAndGet(v -> {
+            try {
+                return v + Files.size(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
+
+        assertThat(result.get().equals(actual.get()));
+    }
     // END
 }
